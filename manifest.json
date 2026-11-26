@@ -1,7 +1,7 @@
 {
   "id": "dataview-column-width",
   "name": "Dataview Column Width",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minAppVersion": "1.6.6",
   "description": "Drag the border between Dataview table headers to set column widths. Widths are remembered per note.",
   "author": "kudrmax",

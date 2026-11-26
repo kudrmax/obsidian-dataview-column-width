@@ -4,13 +4,13 @@
 
 .table-view-table.dataview-column-width-resized {
 	table-layout: fixed;
-	width: 100%;
 }
 
 .table-view-table.dataview-column-width-resized > thead > tr > th,
 .table-view-table.dataview-column-width-resized > tbody > tr > td {
 	box-sizing: border-box;
 	overflow: hidden;
+	text-overflow: clip;
 	overflow-wrap: normal;
 	word-break: normal;
 }
