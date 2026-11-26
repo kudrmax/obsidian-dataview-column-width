@@ -2,43 +2,63 @@ import type { ColumnWidths } from "./ColumnWidthStore";
 
 export class ColumnLayout {
 	static readonly MIN_WIDTH_PX = 16;
+	static readonly FULL = 100;
 
-	static moveBorder(widths: number[], border: number, delta: number, min = ColumnLayout.MIN_WIDTH_PX): number[] {
+	static moveBorder(
+		widths: number[],
+		border: number,
+		delta: number,
+		maxTotal: number,
+		min = ColumnLayout.MIN_WIDTH_PX,
+	): number[] {
 		const left = widths[border];
-		const right = widths[border + 1];
-		if (left === undefined || right === undefined) return [...widths];
-		const shift = Math.min(Math.max(delta, min - left), right - min);
+		if (left === undefined) return [...widths];
 		const result = [...widths];
+		const right = widths[border + 1];
+		if (right === undefined) {
+			const others = ColumnLayout.sum(widths) - left;
+			result[border] = Math.min(Math.max(left + delta, min), Math.max(maxTotal - others, min));
+			return result;
+		}
+		const shift = Math.min(Math.max(delta, min - left), right - min);
 		result[border] = left + shift;
 		result[border + 1] = right - shift;
 		return result;
 	}
 
 	static shares(widths: number[]): number[] {
-		const total = widths.reduce((sum, width) => sum + width, 0);
-		if (total <= 0) return widths.map(() => 0);
-		return widths.map((width) => ColumnLayout.round((width / total) * 100));
+		return ColumnLayout.percentsOf(widths, ColumnLayout.sum(widths));
 	}
 
-	static toPercents(headers: string[], widths: number[]): ColumnWidths {
-		const shares = ColumnLayout.shares(widths);
-		const percents: ColumnWidths = {};
+	static percentsOf(widths: number[], containerWidth: number): number[] {
+		if (containerWidth <= 0) return widths.map(() => 0);
+		return widths.map((width) => ColumnLayout.round((width / containerWidth) * ColumnLayout.FULL));
+	}
+
+	static toPercents(headers: string[], widths: number[], containerWidth: number): ColumnWidths {
+		const percents = ColumnLayout.percentsOf(widths, containerWidth);
+		const result: ColumnWidths = {};
 		headers.forEach((header, index) => {
-			percents[header] = shares[index]!;
+			result[header] = percents[index]!;
 		});
-		return percents;
+		return result;
 	}
 
 	static percentsFor(headers: string[], stored: ColumnWidths): number[] | null {
 		const known = headers.filter((header) => stored[header] !== undefined);
 		if (known.length === 0) return null;
 		const unknownCount = headers.length - known.length;
-		const knownTotal = known.reduce((sum, header) => sum + stored[header]!, 0);
-		const share = unknownCount === 0 ? 0 : Math.max(100 - knownTotal, 0) / unknownCount;
-		const fallback = unknownCount === 0 ? 0 : Math.max(share, 100 / headers.length / 2);
+		const knownTotal = ColumnLayout.sum(known.map((header) => stored[header]!));
+		const remainder = Math.max(ColumnLayout.FULL - knownTotal, 0);
+		const fallback = unknownCount === 0 ? 0 : Math.max(remainder / unknownCount, ColumnLayout.FULL / headers.length / 2);
 		const raw = headers.map((header) => stored[header] ?? fallback);
-		const total = raw.reduce((sum, value) => sum + value, 0);
-		return raw.map((value) => ColumnLayout.round((value / total) * 100));
+		const total = ColumnLayout.sum(raw);
+		const scale = total > ColumnLayout.FULL ? ColumnLayout.FULL / total : 1;
+		return raw.map((value) => ColumnLayout.round(value * scale));
+	}
+
+	static sum(values: number[]): number {
+		return values.reduce((total, value) => total + value, 0);
 	}
 
 	private static round(value: number): number {
