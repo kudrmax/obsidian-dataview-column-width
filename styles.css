@@ -1,0 +1,51 @@
+.table-view-table > thead > tr > th {
+	position: relative;
+}
+
+.table-view-table.dataview-column-width-resized {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.table-view-table.dataview-column-width-resized > thead > tr > th,
+.table-view-table.dataview-column-width-resized > tbody > tr > td {
+	box-sizing: border-box;
+	overflow: hidden;
+	overflow-wrap: normal;
+	word-break: normal;
+}
+
+.dataview-column-width-handle {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 7px;
+	height: 100%;
+	cursor: col-resize;
+	touch-action: none;
+	z-index: 2;
+}
+
+.dataview-column-width-handle::after {
+	content: "";
+	position: absolute;
+	top: 15%;
+	right: 2px;
+	width: 3px;
+	height: 70%;
+	border-radius: 2px;
+	background-color: var(--interactive-accent);
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.dataview-column-width-handle:hover::after,
+.dataview-column-width-handle.is-dragging::after {
+	opacity: 1;
+}
+
+body.dataview-column-width-dragging,
+body.dataview-column-width-dragging * {
+	cursor: col-resize !important;
+	user-select: none;
+}
